@@ -1,17 +1,18 @@
+// rebased
 /* eslint-disable jest/valid-expect */
 const chai = require('chai');
 const expect = chai.expect;
 const request = require('supertest');
 const express = require('express');
-const qaRouter = require('./qa_controllers');
+const productRouter = require('./controllers');
 
-describe('GET /questions/:product_id', () => {
+describe('GET /products', () => {
   let server;
   const port = 3002;
   const app = express();
 
   before((done) => {
-    app.use(qaRouter);
+    app.use(productRouter);
     server = app.listen(port, () => {
       console.log(`Test server is running on http://localhost:${port}`);
       done();
@@ -26,10 +27,8 @@ describe('GET /questions/:product_id', () => {
   });
 
   it('should return a 200 status code and valid JSON response', (done) => {
-    const productId = 37323;
-
     request(app)
-      .get(`/questions/?product_id=${productId}`)
+      .get(`/`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end((err, res) => {
@@ -38,47 +37,50 @@ describe('GET /questions/:product_id', () => {
       });
   });
 
-  it('should include product_id and results in the JSON response', (done) => {
-    const productId = 37323;
+  it('should include correct properties in the JSON response', (done) => {
+    const productId = 10000;
 
     request(app)
-      .get(`/questions/?product_id=${productId}`)
+      .get(`/${productId}`)
       .expect(200)
       .end((err, res) => {
         if (err) return done(err);
+        expect(res.body).to.be.an('object');
+        expect(res.body).to.have.property('id');
+        expect(res.body).to.have.property('name');
+        expect(res.body).to.have.property('slogan');
+        expect(res.body).to.have.property('description');
+        expect(res.body).to.have.property('category');
+        expect(res.body).to.have.property('default_price');
+        expect(res.body).to.have.property('features');
+        done();
+      });
+  });
+
+  it('should return a 200 status code and styles for a product', (done) => {
+    const productId = 1;
+
+    request(server)
+      .get(`/${productId}/styles`)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end((err, res) => {
+        if (err) return done(err);
+
+
         expect(res.body).to.be.an('object');
         expect(res.body).to.have.property('product_id');
         expect(res.body).to.have.property('results');
-        done();
-      });
-  });
-
-  it('should return a 200 status code and valid JSON response for answers to a question', (done) => {
-    const questionId = 131244;
-
-    request(server)
-      .get(`/questions/${questionId}/answers`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-      .end((err, res) => {
-        if (err) return done(err);
-
-
-        expect(res.body).to.be.an('object');
-        expect(res.body).to.have.property('question').to.equal(`${questionId}`);
         expect(res.body).to.have.property('results').to.be.an('array');
 
 
         const results = res.body.results;
         expect(results).to.have.lengthOf.at.least(1);
-        expect(results[0]).to.have.property('answerid').to.be.a('number');
-        expect(results[0]).to.have.property('body').to.be.a('string');
-        expect(results[0]).to.have.property('date').to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/);
-        expect(results[0]).to.have.property('answerer_name').to.be.a('string');
-        expect(results[0]).to.have.property('helpfulness').to.be.a('number');
-        expect(results[0]).to.have.property('reported').to.be.a('boolean');
-        expect(results[0]).to.have.property('photos').to.be.an('null');
-
+        expect(results[0]).to.have.property('style_id').to.be.a('number');
+        expect(results[0]).to.have.property('name').to.be.a('string');
+        expect(results[0]).to.have.property('default?').to.be.a('boolean');
+        expect(results[0]).to.have.property('photos').to.be.an('array');
+        expect(results[0]).to.have.property('skus');
         done();
       });
   });
