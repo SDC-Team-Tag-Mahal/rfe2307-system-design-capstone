@@ -11,17 +11,25 @@ reviewsRouter.get('/', (req, res) => {
   reviews.review_id,
   reviews.product_id,
   reviews.rating,
-  reviews.date,
+  TO_JSON(reviews.date) AS date,
   reviews.summary,
   reviews.body,
   reviews.recommend,
   reviews.reviewer_name,
-  reviews.response,
+  CASE
+    WHEN reviews.response = 'null' THEN NULL -- Convert 'null' to null
+    ELSE reviews.response
+  END AS response,
   reviews.helpfulness,
-  ARRAY_AGG(JSON_BUILD_OBJECT(
-    'id', review_photos.id,
-    'url' , review_photos.url
-  )) AS photos
+  CASE
+    WHEN COUNT(review_photos.id) = 0 THEN '[]'::jsonb
+    ELSE jsonb_agg(
+      JSON_BUILD_OBJECT(
+        'id', review_photos.id,
+        'url', review_photos.url
+      ) ORDER BY review_photos.id
+    )
+  END AS photos
   FROM reviews
   LEFT JOIN review_photos on reviews.review_id = review_photos.id_reviews
   WHERE reviews.review_id >= ${(count * page) - count + 1} AND reviews.review_id <= ${page * count} AND reviews.reported=false
@@ -32,7 +40,7 @@ reviewsRouter.get('/', (req, res) => {
       "product" : req.query.product_id,
       "page": page,
       "count": count,
-      "result": [...result.rows]
+      "results": result.rows
   }
     res.send(final);
   })
@@ -51,9 +59,9 @@ reviewsRouter.get('/meta', (req, res) => {
   '5' , count(reviews.rating) FILTER (where reviews.rating = 5)
 ) AS ratings,
   json_build_object(
-  '0' , count(reviews.recommend) FILTER (where reviews.recommend = TRUE ),
-  '1' , count(reviews.recommend) FILTER (where reviews.recommend = FALSE)
-) AS recommend,
+  'true' , count(reviews.recommend) FILTER (where reviews.recommend = TRUE),
+  'false' , count(reviews.recommend) FILTER (where reviews.recommend = FALSE)
+) AS recommended,
   jsonb_object_agg(
   characteristics.name, jsonb_build_object(
   'id' , characteristic_rating.id_characteristics,
@@ -66,13 +74,12 @@ INNER JOIN  characteristic_rating ON characteristic_rating.id_characteristics = 
 where reviews.product_id = ${req.query.product_id}
 GROUP BY reviews.product_id`
 var query = db.query(queryString).then((result) => {
-  console.log(result.rows)
-  res.send(result.rows);
+  res.send(result.rows[0]);
 })
 });
 
-reviewsRouter.put('/:review_id/helfulness', (req, res) => {
-  const queryString = `UPDATE reviews SET helfulness=helfulness + 1 WHERE "id"=${req.params.review_id}`
+reviewsRouter.put('/:review_id/helpfulness', (req, res) => {
+  const queryString = `UPDATE reviews SET helpfulness=helpfulness + 1 WHERE "review_id"=${req.params.review_id}`
   var query = db.query(queryString).then((result) => {
     res.status(204);
     res.send();
@@ -81,7 +88,7 @@ reviewsRouter.put('/:review_id/helfulness', (req, res) => {
 });
 
 reviewsRouter.put('/:review_id/report', (req, res) => {
-  const queryString =` UPDATE reviews SET reported=true WHERE "id"=${req.params.review_id}`
+  const queryString =` UPDATE reviews SET reported=true WHERE "review_id"=${req.params.review_id}`
   var query = db.query(queryString).then((result) => {
     res.status(204);
     res.send();

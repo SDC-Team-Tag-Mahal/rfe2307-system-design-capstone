@@ -335,7 +335,11 @@ CREATE INDEX idx_answer_photos_id_answer ON answer_photos (id_answer);
 
 CREATE INDEX idx_characteristics_product_id ON characteristics (product_id);
 CREATE INDEX idx_reviews_product_id ON reviews (product_id);
-CREATE INDEX idx_reviews_reported ON reviews (reported);
+CREATE INDEX idx_reviews_response ON reviews (reported);
+CREATE INDEX idx_review_photos_id ON review_photos (id);
+CREATE INDEX idx_review_photos_id_reviews ON review_photos (id_reviews);
+CREATE INDEX idx_reviews_review_id ON reviews (review_id);
+
 CREATE INDEX idx_charateristic_rating_id ON characteristic_rating (id_characteristics);
 
 -- Table Properties
