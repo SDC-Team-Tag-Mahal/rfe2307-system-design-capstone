@@ -55,7 +55,7 @@ productRouter.get('/:product_id/styles', async (req, res) => {
       )
     ) AS skus
   FROM
-  styles
+    styles
   INNER JOIN
     photos ON photos.style_id = styles.id
   INNER JOIN

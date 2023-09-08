@@ -332,7 +332,12 @@ CREATE INDEX idx_answer_id_question ON answer (id_question);
 CREATE INDEX idx_answer_reported ON answer (reported);
 
 CREATE INDEX idx_answer_photos_id_answer ON answer_photos (id_answer);
-
+CREATE INDEX idx_product_id ON product(id);
+CREATE INDEX idx_style_id ON styles(id);
+CREATE INDEX idx_photos_style_id ON photos(style_id);
+CREATE INDEX idx_skus_style_id ON skus(style_id);
+CREATE INDEX idx_features_product_id ON features(product_id);
+CREATE INDEX idx_styles_product_id ON styles(product_id);
 CREATE INDEX idx_characteristics_product_id ON characteristics (product_id);
 CREATE INDEX idx_reviews_product_id ON reviews (product_id);
 CREATE INDEX idx_reviews_response ON reviews (reported);
